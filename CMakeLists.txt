@@ -8,6 +8,9 @@ option(WITH_HTTPD    "HTTP REST API" ON)
 include (CheckIncludeFile)
 include (cmake/cpu.cmake)
 
+if (CMAKE_SYSTEM_NAME MATCHES "Android")
+    include_directories(../libuv/include)
+endif()
 
 set(HEADERS
     src/3rdparty/align.h
@@ -135,7 +138,9 @@ else()
         src/Platform_unix.cpp
         )
 
-    set(EXTRA_LIBS pthread rt)
+    if (NOT CMAKE_SYSTEM_NAME MATCHES "Android")
+        set(EXTRA_LIBS pthread rt)
+    endif()
 endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL FreeBSD)
@@ -144,7 +149,7 @@ endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     EXECUTE_PROCESS(COMMAND uname -o COMMAND tr -d '\n' OUTPUT_VARIABLE OPERATING_SYSTEM)
-    if (OPERATING_SYSTEM MATCHES "Android")
+    if (CMAKE_SYSTEM_NAME MATCHES "Android")
         set(EXTRA_LIBS ${EXTRA_LIBS} log)
     endif()
 endif()
@@ -154,8 +159,9 @@ add_definitions(/DUNICODE)
 #add_definitions(/DAPP_DEBUG)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
-
-find_package(UV REQUIRED)
+if (NOT CMAKE_SYSTEM_NAME MATCHES "Android")
+    find_package(UV REQUIRED)
+endif()
 
 include(cmake/flags.cmake)
 
@@ -203,5 +209,10 @@ include_directories(src)
 include_directories(src/3rdparty)
 include_directories(${UV_INCLUDE_DIR})
 
-add_executable(xmrig ${HEADERS} ${SOURCES} ${SOURCES_OS} ${SOURCES_CPUID} ${HEADERS_CRYPTO} ${SOURCES_CRYPTO} ${SOURCES_SYSLOG} ${HTTPD_SOURCES})
+set(ALL_SOURCES ${HEADERS} ${SOURCES} ${SOURCES_OS} ${SOURCES_CPUID} ${HEADERS_CRYPTO} ${SOURCES_CRYPTO} ${SOURCES_SYSLOG} ${HTTPD_SOURCES})
+if (CMAKE_SYSTEM_NAME MATCHES "Android")
+    add_library(xmrig STATIC ${ALL_SOURCES})
+else()
+    add_executable(xmrig ${ALL_SOURCES})
+endif()
 target_link_libraries(xmrig ${UV_LIBRARIES} ${MHD_LIBRARY} ${EXTRA_LIBS} ${CPUID_LIB})
