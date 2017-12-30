@@ -105,6 +105,7 @@ App::~App()
 #   endif
 
     delete m_console;
+    Log::release();
 }
 
 
