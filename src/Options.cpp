@@ -223,7 +223,7 @@ Options::Options(int argc, char **argv) :
     m_pools.push_back(new Url());
 
     int key;
-
+    optind = 1;
     while (1) {
         key = getopt_long(argc, argv, short_options, options, NULL);
         if (key < 0) {
