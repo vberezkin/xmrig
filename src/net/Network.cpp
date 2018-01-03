@@ -74,6 +74,8 @@ Network::Network(const Options *options) :
 
 Network::~Network()
 {
+    delete m_donate;
+    delete m_strategy;
 }
 
 
